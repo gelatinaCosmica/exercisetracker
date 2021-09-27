@@ -60,9 +60,7 @@ app.get('/api/users', (req, res) => {
 })
 
 app.post('/api/users/:_id/exercises', (req, res) => {
-  /* POST form data description, duration and optionally date.
-   If no date supplied current date will be used */
-  const { userId, description, duration, date } = req.body
+  const { description, duration, date } = req.body
   const dateObj = !date ? new Date() : new Date(date)
   const dateStr = dateObj.toDateString()
 
@@ -88,7 +86,6 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         duration: exerciseData.duration,
         description: exerciseData.description
       }
-      // console.log(newExerciseJson)
       res.json(newExerciseJson)
     })
   })
@@ -99,22 +96,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
   let queryParams = req.query
   let { limit, from, to } = queryParams
   let limitHandler = !limit ? '' : Number(limit)
-  console.log(Number(limit))
-  console.log(from)
-  console.log(to)
-  // User.findOne(id, '-__v', (err, userData) => {
-  //   if (err) return console.error(err)
-  //   Exercise.find({ userId: id }, '-_id -userId -__v', (err, exerciseData) => {
-  //     if (err) return console.error(err)
-  //     let exerciseJson = {
-  //       _id: userData._id,
-  //       username: userData.username,
-  //       count: exerciseData.length,
-  //       log: exerciseData
-  //     }
-  //     res.json(exerciseJson)
-  //   }).limit(Number(limit))
-  // })
+
   User.findOne(id, '-__v', (err, userData) => {
     if (err) return console.error(err)
     if (!userData) {
