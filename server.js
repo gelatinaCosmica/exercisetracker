@@ -19,15 +19,17 @@ app.use(bodyParser.json())
 
 // Schemas and models
 const UserSchema = new mongoose.Schema({
-  username: String,
-  count: Number,
-  log: [{
-    description: String,
-    duration: Number,
-    date: Date
-  }]
+  username: { type: String, unique: true }
 })
 const User = mongoose.model('user', UserSchema)
+
+const exerciseLogSchema = new mongoose.Schema({
+  userId: String,
+  description: String,
+  duration: Number,
+  date: Date
+})
+const Exercise = mongoose.model('exercise', exerciseLogSchema)
 
 // Routes
 app.get('/', (req, res) => {
@@ -60,23 +62,44 @@ app.get('/api/users', (req, res) => {
 app.post('/api/users/:_id/exercises', (req, res) => {
   /* POST form data description, duration and optionally date.
    If no date supplied current date will be used */
-  // let id = { _id: req.params._id }
-  // // let newActivity = [
-  // //   log:
-  // // ]
-  // User.findById(id, (err, data) => {
-  //   if (err) return console.error(err)
-  //   console.log(data)
-  // })
+  const { userId, description, duration, date } = req.body
+  const dateObj = date === undefined ? new Date() : new Date(date)
+
+  const newExercise = new Exercise({
+    userId: req.params._id,
+    description: description,
+    duration: duration,
+    date: dateObj.toString()
+  })
+
+  let id = req.params._id
+  // console.log(id)
+  User.findById(id, (err, data) => {
+    if (err) return console.error(err)
+    newExercise.save((err, data) => {
+      if (err) return console.error(err)
+      console.log('Document Saved Succesfuly')
+      console.log(data)
+      res.json(data)
+    })
+  })
 
   // response will be the user object with the exercise fields added
 })
 
 app.get('/api/users/:_id/logs', (req, res) => {
   let id = { _id: req.params._id }
-  User.findById(id, '-__v', (err, data) => {
+  User.findOne(id, '-__v', (err, userData) => {
     if (err) return console.error(err)
-    res.json(data)
+    Exercise.find({ userId: id }, (err, exerciseData) => {
+      let logJsonResponse = {
+        _id: userData._id,
+        username: userData.username,
+        count: exerciseData.length,
+        log: exerciseData
+      }
+      res.json(logJsonResponse)
+    })
   })
 
 })
