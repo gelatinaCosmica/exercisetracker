@@ -27,7 +27,7 @@ const exerciseLogSchema = new mongoose.Schema({
   userId: String,
   description: String,
   duration: Number,
-  date: Date
+  date: String
 })
 const Exercise = mongoose.model('exercise', exerciseLogSchema)
 
@@ -64,13 +64,16 @@ app.post('/api/users/:_id/exercises', (req, res) => {
    If no date supplied current date will be used */
   const { userId, description, duration, date } = req.body
   const dateObj = date === undefined ? new Date() : new Date(date)
+  const dateStr = dateObj.toDateString()
 
   const newExercise = new Exercise({
     userId: req.params._id,
     description: description,
     duration: duration,
-    date: dateObj.toDateString()
+    date: dateStr
   })
+  console.log(newExercise)
+  console.log(dateStr)
 
   let id = req.params._id
   User.findById(id, (err, userData) => {
@@ -81,23 +84,22 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       let newExerciseJson = {
         _id: id,
         username: userData.username,
-        date: exerciseData.date.toDateString(),
+        date: exerciseData.date,
         duration: exerciseData.duration,
         description: exerciseData.description
       }
-      console.log(newExerciseJson)
+      // console.log(newExerciseJson)
       res.json(newExerciseJson)
     })
   })
-
-  // response will be the user object with the exercise fields added
 })
 
 app.get('/api/users/:_id/logs', (req, res) => {
   let id = { _id: req.params._id }
   User.findOne(id, '-__v', (err, userData) => {
     if (err) return console.error(err)
-    Exercise.find({ userId: id }, (err, exerciseData) => {
+    Exercise.find({ userId: id }, '-_id -userId -__v', (err, exerciseData) => {
+      console.log(exerciseData.date)
       let exerciseJson = {
         _id: userData._id,
         username: userData.username,
