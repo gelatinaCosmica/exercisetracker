@@ -74,13 +74,20 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 
   let id = req.params._id
   // console.log(id)
-  User.findById(id, (err, data) => {
+  User.findById(id, (err, userData) => {
     if (err) return console.error(err)
-    newExercise.save((err, data) => {
+    newExercise.save((err, exerciseData) => {
       if (err) return console.error(err)
       console.log('Document Saved Succesfuly')
-      console.log(data)
-      res.json(data)
+      let newExerciseJson = {
+        _id: id,
+        username: userData.username,
+        date: exerciseData.date,
+        duration: exerciseData.duration,
+        description: exerciseData.description
+      }
+      console.log(newExerciseJson)
+      res.json(newExerciseJson)
     })
   })
 
@@ -92,16 +99,15 @@ app.get('/api/users/:_id/logs', (req, res) => {
   User.findOne(id, '-__v', (err, userData) => {
     if (err) return console.error(err)
     Exercise.find({ userId: id }, (err, exerciseData) => {
-      let logJsonResponse = {
+      let exerciseJson = {
         _id: userData._id,
         username: userData.username,
         count: exerciseData.length,
         log: exerciseData
       }
-      res.json(logJsonResponse)
+      res.json(exerciseJson)
     })
   })
-
 })
 
 
