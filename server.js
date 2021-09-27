@@ -63,7 +63,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   /* POST form data description, duration and optionally date.
    If no date supplied current date will be used */
   const { userId, description, duration, date } = req.body
-  const dateObj = date === undefined ? new Date() : new Date(date)
+  const dateObj = !date ? new Date() : new Date(date)
   const dateStr = dateObj.toDateString()
 
   const newExercise = new Exercise({
@@ -72,7 +72,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     duration: duration,
     date: dateStr
   })
-  console.log(newExercise)
+  console.log(dateObj)
   console.log(dateStr)
 
   let id = req.params._id
@@ -96,21 +96,46 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 
 app.get('/api/users/:_id/logs', (req, res) => {
   let id = { _id: req.params._id }
+  let queryParams = req.query
+  let { limit, from, to } = queryParams
+  let limitHandler = !limit ? '' : Number(limit)
+  console.log(Number(limit))
+  console.log(from)
+  console.log(to)
+  // User.findOne(id, '-__v', (err, userData) => {
+  //   if (err) return console.error(err)
+  //   Exercise.find({ userId: id }, '-_id -userId -__v', (err, exerciseData) => {
+  //     if (err) return console.error(err)
+  //     let exerciseJson = {
+  //       _id: userData._id,
+  //       username: userData.username,
+  //       count: exerciseData.length,
+  //       log: exerciseData
+  //     }
+  //     res.json(exerciseJson)
+  //   }).limit(Number(limit))
+  // })
   User.findOne(id, '-__v', (err, userData) => {
     if (err) return console.error(err)
-    Exercise.find({ userId: id }, '-_id -userId -__v', (err, exerciseData) => {
-      console.log(exerciseData.date)
-      let exerciseJson = {
-        _id: userData._id,
-        username: userData.username,
-        count: exerciseData.length,
-        log: exerciseData
-      }
-      res.json(exerciseJson)
-    })
+    if (!userData) {
+      res.send("Unknown userId")
+    } else {
+      Exercise
+        .find({ userId: id }, '-_id -userId -__v', { date: { $gte: new Date(from), $lte: new Date(to) } })
+        .limit(limitHandler)
+        .exec((err, exerciseData) => {
+          if (err) return console.error(err)
+          let exerciseJson = {
+            _id: userData._id,
+            username: userData.username,
+            count: exerciseData.length,
+            log: exerciseData
+          }
+          res.json(exerciseJson)
+        })
+    }
   })
 })
-
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
