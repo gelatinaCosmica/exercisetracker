@@ -69,11 +69,10 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     userId: req.params._id,
     description: description,
     duration: duration,
-    date: dateObj.toString()
+    date: dateObj.toDateString()
   })
 
   let id = req.params._id
-  // console.log(id)
   User.findById(id, (err, userData) => {
     if (err) return console.error(err)
     newExercise.save((err, exerciseData) => {
@@ -82,7 +81,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       let newExerciseJson = {
         _id: id,
         username: userData.username,
-        date: exerciseData.date,
+        date: exerciseData.date.toDateString(),
         duration: exerciseData.duration,
         description: exerciseData.description
       }
